@@ -32,21 +32,37 @@ public class MainClass {
             individuals = get_individuals(population, k);
             individuals = order(individuals);
             if(fitness(individuals.get(0)) > best_performance){
-                best_performance = fitness(individuals.get(0));
+                best_performance = fitness(individuals.get(0)); //reassigning best  fitness
                 better_not_changed = 0;
                 best_path = individuals.get(0);
             }else{
                 better_not_changed++;
             }
-            print_path(individuals);
+            //print_path(individuals);
             ArrayList<int[]> crossed_over = new ArrayList<int[]>();
             for(int i = 1; i<k; i= i+2){
                 Pair<int[],int[]> a = cross_over(individuals.get(i-1), individuals.get(i));
                 crossed_over.add(a.getKey());
                 crossed_over.add(a.getValue());
             }
+            
+            //MUTATION REMAININGmnb
+            int mutate_over_1;
+            
+            print_path(crossed_over);
+            System.out.println("\n");
+            for(int i = 0; i<k; i++){
+                int ran_swap_1 = (int)(Math.random()*8);
+                int ran_swap_2 = (int)(Math.random()*8);
+                mutate_over_1= crossed_over.get(i)[ran_swap_1];
+                crossed_over.get(i)[ran_swap_1]= crossed_over.get(i)[ran_swap_2];
+                crossed_over.get(i)[ran_swap_2]= mutate_over_1;
+                
+                
+            }
+            print_path(crossed_over);
             population.addAll(crossed_over);
-            //MUTATION REMAINING
+            
         }
         System.out.println("Best path found: " + names[best_path[0]] + " " + names[best_path[1]] + " " + names[best_path[2]] + " " + names[best_path[3]] + " " + names[best_path[4]] + " " + names[best_path[5]] + " " + names[best_path[6]] + " " + names[best_path[7]]);
     }
