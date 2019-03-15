@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.stream.IntStream;
 import javafx.util.Pair;
 
 /**
@@ -17,20 +18,62 @@ import javafx.util.Pair;
  */
 public class MainClass {
     
-    private static int[][] dist = {{0, 172, 145, 607, 329, 72, 312, 120}, {172, 0, 192, 494, 209, 158, 216, 92}, {145, 192, 0, 490, 237, 75, 205, 100}, {607, 494, 490, 0, 286, 545, 296, 489}, {329, 209, 237, 286, 0, 421, 49, 208}, {72, 158, 75, 545, 421, 0, 249, 75}, {312, 216, 205, 296, 49, 249, 0, 194}, {120, 92, 100, 489, 208, 75, 194, 0}};
-    private static String[] names = {"Brighton", "Bristol", "Cambridge", "Glasgow", "Liverpool", "London", "Manchester", "Oxford"};
+    private static int[][] city_positions = {{20, 20}, {20, 40}, {20, 160}, {40, 120}, {60, 20}, {60, 80}, {60, 200}, {80, 180}, {100, 40}, {100, 120}, {100, 160}, {120, 80}, {140, 140}, {140, 180}, {160, 20}, {180, 60}, {180, 100}, {180, 200}, {200, 40}, {200, 160}};
+    private static String[] generic_names = {"A", "B", "C", "D", "E", "F", "G", "H", "I" , "J", "K", "L", "M", "N", "O", "P", "Q", "R" , "S" , "T"};
+    private static int[][] uk_distances = {{0, 172, 145, 607, 329, 72, 312, 120}, {172, 0, 192, 494, 209, 158, 216, 92}, {145, 192, 0, 490, 237, 75, 205, 100}, {607, 494, 490, 0, 286, 545, 296, 489}, {329, 209, 237, 286, 0, 421, 49, 208}, {72, 158, 75, 545, 421, 0, 249, 75}, {312, 216, 205, 296, 49, 249, 0, 194}, {120, 92, 100, 489, 208, 75, 194, 0}};
+    private static String[] city_names = {"Brighton", "Bristol", "Cambridge", "Glasgow", "Liverpool", "London", "Manchester", "Oxford"};
+    private static ArrayList<ArrayList<Double>> dist = new ArrayList(); 
+    private static ArrayList<String> names = new ArrayList<String>();
+    
+    private static void load_data(boolean b) {
+        if(b){
+            for(int i=0; i<uk_distances.length; i++){
+                ArrayList<Double> arr = new ArrayList<Double>();
+                for(int j=0; j<uk_distances.length; j++){
+                    arr.add(new Double(uk_distances[i][j]));
+                }
+                dist.add(arr);
+            }
+            for(int i=0; i<city_names.length; i++){
+                names.add(city_names[i]);
+            }
+        }else{
+            for(int i=0; i<city_positions.length; i++){
+                ArrayList<Double> arr = new ArrayList<Double>();
+                for(int j=0; j<city_positions.length; j++){
+                    arr.add(new Double(calculate_diustance(city_positions[i], city_positions[j])));
+                }
+                dist.add(arr);
+            }
+            for(int i=0; i<generic_names.length; i++){
+                names.add(generic_names[i]);
+            }
+        }
+    }
+    
+    private static double calculate_diustance(int[] city_position1, int[] city_position2) {
+        double x1 = city_position1[0];
+        double y1 = city_position1[1];
+        double x2 = city_position2[0];
+        double y2 = city_position2[1];
+        return Math.sqrt(((x1-x2)*(x1-x2))+((y1-y2)*(y1-y2)));
+    }
     
     public static void main(String[] args) {
+        boolean solve_uk_cities = false;
+        load_data(solve_uk_cities);
+        System.out.println(dist.size() + " " + dist);
+        System.out.println(names.size() + " " +names);
         int k = 10;
-        ArrayList<int[]> population = initialization(k);
-        //NO OLVIDAR HACER SELECCION DE INDIVIDUALS ANTES DE HACER LA SEGUNDA ITERACIÓN
-        ArrayList<int[]> individuals = population;
-        int best_performance = 0;
-        int[] best_path = new int[8];
+        ArrayList<ArrayList<Integer>> population = initialization(k);
+        ArrayList<ArrayList<Integer>> individuals = population;
+        double best_performance = 0;
+        ArrayList<Integer> best_path = new ArrayList<Integer>();
         int better_not_changed = 0;
-        while(better_not_changed < 10){
+        while(better_not_changed < 20){
             individuals = get_individuals(population, k);
             individuals = order(individuals);
+            print_path(individuals);
             if(fitness(individuals.get(0)) > best_performance){
                 best_performance = fitness(individuals.get(0)); //reassigning best  fitness
                 better_not_changed = 0;
@@ -39,54 +82,52 @@ public class MainClass {
                 better_not_changed++;
             }
             //print_path(individuals);
-            ArrayList<int[]> crossed_over = new ArrayList<int[]>();
+            ArrayList<ArrayList<Integer>> crossed_over = new ArrayList<>();
             for(int i = 1; i<k; i= i+2){
-                Pair<int[],int[]> a = cross_over(individuals.get(i-1), individuals.get(i));
+                Pair<ArrayList<Integer>,ArrayList<Integer>> a = cross_over(individuals.get(i-1), individuals.get(i));
                 crossed_over.add(a.getKey());
                 crossed_over.add(a.getValue());
             }
             
-            //MUTATION REMAININGmnb
-            int mutate_over_1;
-            
-            print_path(crossed_over);
-            System.out.println("\n");
+            ArrayList<ArrayList<Integer>> mutated = new ArrayList<>();
             for(int i = 0; i<k; i++){
-                int ran_swap_1 = (int)(Math.random()*8);
-                int ran_swap_2 = (int)(Math.random()*8);
-                mutate_over_1= crossed_over.get(i)[ran_swap_1];
-                crossed_over.get(i)[ran_swap_1]= crossed_over.get(i)[ran_swap_2];
-                crossed_over.get(i)[ran_swap_2]= mutate_over_1;
-                
-                
+                ArrayList<Integer> a = mutate(crossed_over.get(i));
+                mutated.add(a);
             }
-            print_path(crossed_over);
-            population.addAll(crossed_over);
+            population.addAll(mutated);  
+            eliminate_equals(population);
             
         }
-        System.out.println("Best path found: " + names[best_path[0]] + " " + names[best_path[1]] + " " + names[best_path[2]] + " " + names[best_path[3]] + " " + names[best_path[4]] + " " + names[best_path[5]] + " " + names[best_path[6]] + " " + names[best_path[7]]);
+        System.out.print("Best path: ");
+        for(int j=0; j<names.size(); j++){
+                System.out.print(names.get(best_path.get(j)) + " ");
+        }
+        System.out.println();
+        if(!solve_uk_cities){
+            System.out.println("GRAPHIC OUTPUT REMAINING!");
+        }
     }
     
-    private static int fitness(int[] path) {
-        int sum = 0;
+    private static double fitness(ArrayList<Integer> path) {
+        double sum = 0;
         for(int i=1; i<8; i++){
-            sum += dist[path[i-1]][path[i]];
+            sum += dist.get(path.get(i-1)).get(path.get(i));
         }
         return (5600 - sum);
     }
 
-    private static ArrayList<int[]> initialization(int k) {
-       ArrayList<int[]> ret = new ArrayList<int[]>();
-       Boolean[] alr = new Boolean[8];
+    private static ArrayList<ArrayList<Integer>> initialization(int k) {
+       ArrayList<ArrayList<Integer>> ret = new ArrayList<>();
+       Boolean[] alr = new Boolean[names.size()];
        for(int i=0; i<k; i++){
-           int[] ass = new int[8];
+           ArrayList<Integer> ass = new ArrayList<Integer>();
            Arrays.fill(alr, Boolean.FALSE);
-           for(int j=0; j<8; j++){
-               int ran = (int)(Math.random()*8);
+           for(int j=0; j<names.size(); j++){
+               int ran = (int)(Math.random()*names.size());
                while(alr[ran]){
-                   ran = (int)(Math.random()*8);
+                   ran = (int)(Math.random()*names.size());
                 }
-                ass[j] = ran;
+                ass.add(ran);
                 alr[ran] = true;
            }
            ret.add(ass);
@@ -94,70 +135,126 @@ public class MainClass {
        return ret;
     }
 
-    private static Pair cross_over(int[] par1, int[] par2) {
-        int[] encoded_offspring1 = new int[8];
-        int[] encoded_offspring2 = new int[8];
-        int[] encoded_par1 = encode(par1);
-        int[] encoded_par2 = encode(par2);
-        int ran = (int)(Math.random()*8);
-        for(int i = 0; i<8; i++){
+    private static Pair<ArrayList<Integer>,ArrayList<Integer>> cross_over(ArrayList<Integer> par1, ArrayList<Integer> par2) {
+        int[] encoded_offspring1 = new int[names.size()];
+        int[] encoded_offspring2 = new int[names.size()];
+        ArrayList<Integer> encoded_par1 = encode(par1);
+        ArrayList<Integer> encoded_par2 = encode(par2);
+        int ran = (int)(Math.random()*names.size());
+        for(int i = 0; i<names.size(); i++){
             if (i<ran){
-                encoded_offspring1[i] = encoded_par1[i];
-                encoded_offspring2[i] = encoded_par2[i];
+                encoded_offspring1[i] = encoded_par1.get(i);
+                encoded_offspring2[i] = encoded_par2.get(i);
             }else{
-                encoded_offspring1[i] = encoded_par2[i];
-                encoded_offspring2[i] = encoded_par1[i];
+                encoded_offspring1[i] = encoded_par2.get(i);
+                encoded_offspring2[i] = encoded_par1.get(i);
             }
         }
-        int[] offspring1 = decode(encoded_offspring1);
-        int[] offspring2 = decode(encoded_offspring2);
+        ArrayList<Integer> offspring1 = decode(encoded_offspring1);
+        ArrayList<Integer> offspring2 = decode(encoded_offspring2);
         Pair a = new Pair(offspring1, offspring2);
         return a;
     }
 
-    private static ArrayList<int[]> order(ArrayList<int[]> individuals) {
-        Collections.sort(individuals, new Comparator<int[]>() {
-			public int compare(int[] o1, int[] o2) {
-				return fitness(o2) - fitness(o1);
+    private static ArrayList<ArrayList<Integer>> order(ArrayList<ArrayList<Integer>> individuals) {
+        Collections.sort(individuals, new Comparator<ArrayList<Integer>>() {
+			public int compare(ArrayList<Integer> o1, ArrayList<Integer> o2) {
+				return (int) (fitness(o2) - fitness(o1));
 			}
 		});
         return individuals;
     }
 
-    private static void print_path(ArrayList<int[]> paths) {
-        for(int[] i : paths){
-            System.out.println(names[i[0]] + " "  + names[i[1]]+ " " + names[i[2]] + " "+ names[i[3]] + " "+ names[i[4]] + " "+ names[i[5]] + " "+ names[i[6]] + " "+ names[i[7]] + ": " + fitness(i));
+    private static void print_path(ArrayList<ArrayList<Integer>> paths) {
+        for(ArrayList<Integer> i : paths){
+            for(int j=0; j<names.size(); j++){
+                System.out.print(names.get(i.get(j)) + " ");
+            }
+            System.out.println(" Fitness: " + fitness(i));
         }
         System.out.println("\n");
     }
 
-    private static int[] encode(int[] par1) {
-        ArrayList<Integer> positions = new ArrayList<Integer>(){{add(new Integer(0)); add(new Integer(1)); add(new Integer(2)); add(new Integer(3)); add(new Integer(4)); add(new Integer(5)); add(new Integer(6)); add(new Integer(7));}};
-        int[] encoded = new int[8];
-        for(int i=0; i<par1.length; i++){
-            encoded[i] = positions.indexOf(new Integer(par1[i]));
-            positions.remove(new Integer(par1[i]));
+    private static ArrayList<Integer> encode(ArrayList<Integer> par1) {
+        ArrayList<Integer> positions = consecutives(names.size());
+        int[] encoded = new int[names.size()];
+        for(int i=0; i<par1.size(); i++){
+            encoded[i] = positions.indexOf(par1.get(i));
+            positions.remove(par1.get(i));
         }
-    return encoded;
+        ArrayList<Integer> encodedArray = new ArrayList<Integer>();
+        for(int i=0; i<par1.size(); i++){
+            encodedArray.add(encoded[i]);
+        }
+    return encodedArray;
     }
 
-    private static int[] decode(int[] encoded_offspring1) {
-        ArrayList<Integer> positions = new ArrayList<Integer>(){{add(new Integer(0)); add(new Integer(1)); add(new Integer(2)); add(new Integer(3)); add(new Integer(4)); add(new Integer(5)); add(new Integer(6)); add(new Integer(7));}};
-        int[] decoded = new int[8];
+    private static ArrayList<Integer> decode(int[] encoded_offspring1) {
+        ArrayList<Integer> positions = consecutives(names.size());
+        int[] decoded = new int[names.size()];
         for(int i=0; i<encoded_offspring1.length; i++){
             decoded[i] = positions.get(encoded_offspring1[i]);
             positions.remove(positions.get(encoded_offspring1[i]));
         }
-        return decoded;
+        ArrayList<Integer> decodedArray = new ArrayList<Integer>();
+        for(int i=0; i<encoded_offspring1.length; i++){
+            decodedArray.add(decoded[i]);
+        }
+        return decodedArray;
     }
 
-    private static ArrayList<int[]> get_individuals(ArrayList<int[]> population, int k) {
+    private static ArrayList<ArrayList<Integer>> get_individuals(ArrayList<ArrayList<Integer>> population, int k) {
         population = order(population);
-        ArrayList<int[]> individuals = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> individuals = new ArrayList<>();
         for(int i =0; i<k; i++){
             individuals.add(population.get(i));
         }
         return individuals;
+    }
+
+    private static ArrayList<Integer> consecutives(int size) {
+        ArrayList<Integer> arr = new ArrayList<Integer>();
+        for(int i=0; i<size; i++){
+            arr.add(new Integer(i));
+        }
+        return arr;
+    }
+
+    private static ArrayList<Integer> mutate(ArrayList<Integer> ind) {
+        int ran = (int)(Math.random()*names.size());
+        int ran2 = (int)(Math.random()*names.size());
+        while(ran==ran2){
+            ran2 = (int)(Math.random()*names.size());
+        }
+        int aux = ind.get(ran2);
+        ind.set(ran2, ind.get(ran));
+        ind.set(ran, aux);
+        return ind;
+    }
+
+    private static void eliminate_equals(ArrayList<ArrayList<Integer>> population) {
+        ArrayList<Integer> delete = new ArrayList<Integer>();
+        for(int i=0; i<population.size(); i++){
+            for(int j=i+1; j<population.get(i).size(); j++){
+                if(equal(population.get(i), population.get(j))){
+                    delete.add(i);
+                }
+            }
+        }
+        for(int i=0; i<delete.size(); i++){
+            int a = delete.get(i).intValue();
+            population.remove(a);
+        }
+    }
+
+    private static boolean equal(ArrayList<Integer> get, ArrayList<Integer> get0) {
+        boolean equal =true;
+        for(int i=0; i<get.size(); i++){
+            if(get.get(i) != get0.get(i)){
+                equal = false;
+            }
+        }
+        return equal;
     }
     
 }
