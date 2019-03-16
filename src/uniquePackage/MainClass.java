@@ -104,7 +104,8 @@ public class MainClass {
         }
         System.out.println();
         if(!solve_uk_cities){
-            System.out.println("GRAPHIC OUTPUT REMAINING!");
+            DrawFrame df = new DrawFrame(city_positions, best_path);
+            df.setVisible(true);
         }
     }
     
