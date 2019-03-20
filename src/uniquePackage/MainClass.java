@@ -64,7 +64,7 @@ public class MainClass {
         load_data(solve_uk_cities);
         System.out.println(dist.size() + " " + dist);
         System.out.println(names.size() + " " +names);
-        int k = 10;
+        int k = 1000;
         ArrayList<ArrayList<Integer>> population = initialization(k);
         ArrayList<ArrayList<Integer>> individuals = population;
         double best_performance = 0;
@@ -111,7 +111,7 @@ public class MainClass {
     
     private static double fitness(ArrayList<Integer> path) {
         double sum = 0;
-        for(int i=1; i<8; i++){
+        for(int i=1; i<names.size(); i++){
             sum += dist.get(path.get(i-1)).get(path.get(i));
         }
         return (5600 - sum);
@@ -141,7 +141,8 @@ public class MainClass {
         int[] encoded_offspring2 = new int[names.size()];
         ArrayList<Integer> encoded_par1 = encode(par1);
         ArrayList<Integer> encoded_par2 = encode(par2);
-        int ran = (int)(Math.random()*names.size());
+        //int ran = (int)(Math.random()*names.size()); //doing selection and crossover by selecting a random value
+        int ran = 6; //doing the selection and crossover by fixing a integer value
         for(int i = 0; i<names.size(); i++){
             if (i<ran){
                 encoded_offspring1[i] = encoded_par1.get(i);
@@ -222,8 +223,10 @@ public class MainClass {
     }
 
     private static ArrayList<Integer> mutate(ArrayList<Integer> ind) {
-        int ran = (int)(Math.random()*names.size());
-        int ran2 = (int)(Math.random()*names.size());
+        //int ran = (int)(Math.random()*names.size());
+        //int ran2 = (int)(Math.random()*names.size());
+        int ran = 3;
+        int ran2= 7;
         while(ran==ran2){
             ran2 = (int)(Math.random()*names.size());
         }
